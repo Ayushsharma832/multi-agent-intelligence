@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Strategic Intelligence System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            background: linear-gradient(135deg, #1f2937, #111827);
+            color: white;
+        }
+    
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+    
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+        }
+    
+        button {
+            padding: 12px 20px;
+            margin-top: 15px;
+            border-radius: 8px;
+            border: none;
+            background-color: #2563eb;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    
+        button:hover {
+            background-color: #1d4ed8;
+        }
+    
+        .output {
+            margin-top: 30px;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.4);
+        }
+    
+        h3 {
+            color: #60a5fa;
+        }
+    </style>
+    
+</head>
+<body>
+
+<h1>Multi-Agent Strategic Intelligence</h1>
+<p style="opacity: 0.7;">
+    This system analyzes business and strategic decisions. 
+    Non-business queries will be answered in General Mode.
+    </p>
+    
+<textarea id="query" placeholder="Enter strategic question..."></textarea>
+<br>
+<button onclick="analyze()">Analyze</button>
+
+<div class="output" id="output"></div>
+
+<script>
+async function analyze() {
+    const query = document.getElementById("query").value;
+    const outputDiv = document.getElementById("output");
+
+    outputDiv.innerHTML = "<p><em>Analyzing strategic scenario... Please wait...</em></p>";
+
+    const response = await fetch("/analyze", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({query})
+    });
+
+    const data = await response.json();
+
+    if (data.mode === "general") {
+        outputDiv.innerHTML = `
+            <h3>Mode Selected: General AI</h3>
+            <p><em>${data.mode_reason}</em></p>
+            <p><em>Web search used: ${data.used_web_search}</em></p>
+
+            <hr>
+            <h3>Summary:</h3>
+            <p>${data.summary}</p>
+            <h3>Key Points:</h3>
+            <ul>
+  ${data.key_points.map(point => `<li>${point}</li>`).join('')}
+</ul>
+
+            <h3>Recommendation:</h3>
+            <p><strong>${data.recommendation}</strong></p>
+            <h3>Confidence:</h3>
+            <p>${data.confidence_level}</p>
+        `;
+    }
+ else {
+        outputDiv.innerHTML = `
+            <h3>Mode Selected: Strategic Intelligence</h3>
+            <p><em>${data.mode_reason}</em></p>
+            <hr>
+            <h3>Final Decision:</h3>
+            <p><strong>${data.final_decision}</strong></p>
+            <h3>Justification:</h3>
+            <p>${data.justification_summary}</p>
+            <h3>Key Monitoring Metrics:</h3>
+            <p>${data.key_monitoring_metrics}</p>
+        `;
+    }
+
+
+}
+
+</script>
+
+</body>
+</html>
