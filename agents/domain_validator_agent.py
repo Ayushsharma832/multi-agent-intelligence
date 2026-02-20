@@ -9,20 +9,24 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 def domain_validator_agent(query: str):
 
     prompt = f"""
-You are a domain classifier.
+Classify the intent of the following query.
 
-Determine if the following query is related to business, corporate strategy,
-market expansion, financial decision, or enterprise analysis.
-
-Return ONLY valid JSON.
-No markdown.
-No explanation.
+Return ONLY JSON.
+No explanation outside JSON.
 
 JSON schema:
 {{
-  "is_business_query": true/false,
+  "intent": "strategic" | "informational" | "general",
   "reason": "short explanation"
 }}
+
+Definitions:
+
+strategic → Business strategy, investment decisions, corporate expansion, risk evaluation.
+
+informational → Requests for facts, statistics, rankings, current data, economic indicators.
+
+general → Personal advice, lifestyle questions, philosophical or casual questions.
 
 Query:
 {query}
@@ -33,14 +37,21 @@ Query:
         messages=[{"role": "user", "content": prompt}],
         temperature=0
     )
+    import re
 
+    def safe_json_extract(text):
+        match = re.search(r"\{.*\}", text, re.DOTALL)
+        if match:
+            return match.group()
+        return None
+        
     raw_output = response.choices[0].message.content.strip()
-
+    cleaned = safe_json_extract(raw_output)
     try:
-        return json.loads(raw_output)
+        return json.loads(cleaned)
     except:
         return {
-            "is_business_query": False,
-            "reason": "Could not confidently classify query."
+            "intent": "general",
+            "reason": "Model output was not valid JSON."
         }
 

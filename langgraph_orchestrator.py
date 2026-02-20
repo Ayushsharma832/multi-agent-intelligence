@@ -14,7 +14,7 @@ from agents.general_agent import general_agent
 
 class AgentState(TypedDict):
     query: str
-    is_business_query: bool
+    intent: str
     mode_reason: str
     general_response: str
     used_web_search: bool
@@ -28,8 +28,8 @@ def validation_node(state: AgentState):
     result = domain_validator_agent(state["query"])
 
     return {
-        "is_business_query": result["is_business_query"],
-        "mode_reason": result["reason"]
+        "intent": result.get("intent", "general"),
+        "mode_reason": result.get("reason", "Fallback classification")
     }
 
 
@@ -94,7 +94,7 @@ def build_graph():
     workflow.set_entry_point("validation")
 
     def route_query(state: AgentState):
-        if state["is_business_query"]:
+        if state["intent"] == "strategic":
             return "research"
         else:
             return "general"
